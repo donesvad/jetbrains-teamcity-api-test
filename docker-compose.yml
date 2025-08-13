@@ -1,0 +1,33 @@
+services:
+  tc-server:
+    image: jetbrains/teamcity-server:2025.07
+    container_name: tc-server
+    ports:
+      - "8111:8111"
+    environment:
+      - TEAMCITY_SERVER_MEM_OPTS=-Xmx2g
+      - TEAMCITY_SERVER_OPTS=-Dteamcity.startup.maintenance=false
+    volumes:
+      - ./tc_data/datadir:/data/teamcity_server/datadir
+      - ./tc_data/logs:/opt/teamcity/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8111 | grep -q TeamCity || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    networks:
+      - tcnet
+
+  tc-agent:
+    image: jetbrains/teamcity-agent:2025.07
+    container_name: tc-agent
+    environment:
+      - SERVER_URL=http://tc-server:8111
+    depends_on:
+      - tc-server
+    networks:
+      - tcnet
+
+networks:
+  tcnet:
+    driver: bridge

@@ -1,6 +1,30 @@
-cars-service-rest:
-  host: vpic.nhtsa.dot.gov
-  protocol: https
-  base-path: /api/vehicles
-log:
-  rest-assured-responses: false
+tc:
+  baseUrl: "http://localhost:8111"
+  username: "admin"
+  password: "admin123_ChangeMe"
+
+  projectId: "DslSamples"
+  compileBuildTypeId: "CompileApp"
+  publishBuildTypeId: "PublishApp"
+  deletedBuildTypeId: ""
+
+#  sampleRepoUrl: "https://github.com/JetBrains/Maven-Configuration-TeamCity-Samples.git"
+#  sampleRepoBranch: "refs/heads/master"
+
+  # DSL repo under test (must be writeable for sync tests)
+  dslRepoUrl: "https://github.com/your-org/your-teamcity-dsl.git"
+  dslRepoBranch: "refs/heads/main"
+
+  # Path (relative to repo root) to the BuildType file that contains the parameter line to edit
+  # Example for Kotlin DSL: buildTypes/CompileApp.kts
+  dslBuildTypeFilePath: "teamcity/buildTypes/CompileApp.kts"
+
+  # The exact parameter name to round-trip
+  roundtripParamName: "env.MESSAGE"
+
+  # Optional: commit author used for test commits
+  gitAuthorName: "tc-e2e-bot"
+  gitAuthorEmail: "tc-e2e-bot@example.com"
+
+  # Set to true when TeamCity is allowed to commit UI changes back to the repo
+  versionedSettingsServerCanCommit: true

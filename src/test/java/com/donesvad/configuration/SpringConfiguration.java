@@ -1,17 +1,7 @@
 package com.donesvad.configuration;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_ENUMS_USING_TO_STRING;
-
 import com.donesvad.util.YamlPropertySourceFactory;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -25,19 +15,35 @@ import org.springframework.test.context.ContextConfiguration;
       "classpath:test-data-${environment:dev}.yml"
     },
     factory = YamlPropertySourceFactory.class)
+@EnableConfigurationProperties({TestConfig.class})
 @ContextConfiguration
 public class SpringConfiguration {
 
-  @Bean
-  public ObjectMapper objectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new JavaTimeModule());
-    objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
-    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    objectMapper.configure(WRITE_DATES_AS_TIMESTAMPS, false);
-    objectMapper.configure(WRITE_ENUMS_USING_TO_STRING, true);
-    objectMapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    return objectMapper;
-  }
+  //    @Bean
+  //    public ApiClient apiClient(TestConfig cfg) {
+  //        return new ApiClient(cfg.getBaseUrl(), cfg.getUsername(), cfg.getPassword());
+  //    }
+  //
+  //    @Bean
+  //    public TeamCityClient teamCityClient(ApiClient api) {
+  //        return new TeamCityClient(api);
+  //    }
+  //
+  //    @Bean
+  //    public TeamCityService teamCityService(TeamCityClient client) {
+  //        return new TeamCityService(client);
+  //    }
+
+  //  @Bean
+  //  public ObjectMapper objectMapper() {
+  //    ObjectMapper objectMapper = new ObjectMapper();
+  //    objectMapper.registerModule(new JavaTimeModule());
+  //    objectMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
+  //    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+  //    objectMapper.configure(WRITE_DATES_AS_TIMESTAMPS, false);
+  //    objectMapper.configure(WRITE_ENUMS_USING_TO_STRING, true);
+  //    objectMapper.registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
+  //    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  //    return objectMapper;
+  //  }
 }
