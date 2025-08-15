@@ -104,11 +104,6 @@ jobs:
           chmod +x scripts/bootstrap-admin.sh
           ./scripts/bootstrap-admin.sh
 
-      - name: Free disk space
-        run: |
-          docker system prune --all --force --volumes || true
-          sudo rm -rf /tmp/* || true
-
       - name: Build
         env:
           VCS_PAT: ${{ secrets.VCS_PAT }}
