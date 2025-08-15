@@ -120,10 +120,10 @@ jobs:
         env:
           VCS_PAT: ${{ secrets.VCS_PAT }}
           VCS_USERNAME: ${{ secrets.VCS_USERNAME }}
-        run: docker compose run --rm test-runner
+        run: docker compose run test-runner
 
       - name: Copy Allure results
-        run: docker cp java-api-tests-container:/app/target/allure-results ./allure-results
+        run: docker cp test-runner:/app/target/allure-results ./allure-results
 
       - name: Dump logs on failure
         if: failure()
