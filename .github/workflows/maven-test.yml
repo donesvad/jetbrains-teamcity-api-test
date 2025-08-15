@@ -28,35 +28,69 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq curl
 
+      # 1) Try to restore cached TeamCity images tar
+      - name: Restore TeamCity Docker images cache
+        id: tc-cache
+        uses: actions/cache@v4
+        with:
+          path: teamcity-cache/teamcity-images.tar
+          key: teamcity-images-2025-07-v1
+          restore-keys: |
+            teamcity-images-2025-07-
+
+      # 2) Load cached images if present, otherwise pull and save them
+      - name: Load or pull TeamCity images
+        run: |
+          set -euo pipefail
+          mkdir -p teamcity-cache
+
+          if [ -f teamcity-cache/teamcity-images.tar ]; then
+            echo "Cache hit. Loading TeamCity images from tar..."
+            docker load -i teamcity-cache/teamcity-images.tar
+          else
+            echo "Cache miss. Pulling TeamCity images..."
+            docker pull jetbrains/teamcity-server:2025.07
+            docker pull jetbrains/teamcity-agent:2025.07
+
+            echo "Saving TeamCity images to tar for caching..."
+            docker save \
+              jetbrains/teamcity-server:2025.07 \
+              jetbrains/teamcity-agent:2025.07 \
+              -o teamcity-cache/teamcity-images.tar
+          fi
+
       - name: Start TeamCity with docker compose
         run: docker compose up -d tc-server tc-agent
 
-      - name: Wait for TeamCity HTTP to load
+      - name: Wait for TeamCity HTTP to be reachable
         run: |
           echo "Waiting for http://localhost:8111 ..."
+          ready=false
           for i in $(seq 1 120); do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
             echo "Attempt $i: HTTP $code"
-            if [ "$code" = "401" ]; then
-              echo "Server is ready, HTTP $code"
+            if [ "$code" = "200" ] || [ "$code" = "401" ]; then
+              echo "Server is reachable, HTTP $code"
+              ready=true
               break
             fi
             sleep 2
           done
+          if [ "$ready" != "true" ]; then
+            echo "ERROR: TeamCity did not become reachable in time"
+            exit 1
+          fi
 
       - name: Bootstrap TeamCity admin
         run: |
           chmod +x scripts/bootstrap-admin.sh
           ./scripts/bootstrap-admin.sh
 
-      - name: Build tests
-        run: mvn -q -DskipTests package
-
       - name: Run tests
         env:
           VCS_PAT: ${{ secrets.VCS_PAT }}
           VCS_USERNAME: ${{ secrets.VCS_USERNAME }}
-        run: mvn -q test
+        run: docker compose run --rm test-runner
 
       - name: Dump logs on failure
         if: failure()
