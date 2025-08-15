@@ -7,6 +7,11 @@ ADMIN_USER="admin"
 ADMIN_PASS="admin123_ChangeMe"
 ADMIN_EMAIL="admin@example.com"
 
+# Run curl inside tc-server's network namespace so localhost:8111 is reachable on GitHub Actions
+curl_in() {
+  docker run --rm --network "container:${SERVER_SERVICE}" curlimages/curl:8.10.1 "$@"
+}
+
 echo "[1/3] Waiting for super user token in logs..."
 TOKEN=""
 for i in $(seq 1 180); do
@@ -27,7 +32,7 @@ fi
 
 echo "[2/3] Creating admin user via REST..."
 # idempotent create: handle 201, 200, or 409
-create_code=$(curl -s -o /dev/null -w "%{http_code}" -u ":${TOKEN}" -H "Content-Type: application/json" \
+create_code=$(curl_in -s -o /dev/null -w "%{http_code}" -u ":${TOKEN}" -H "Content-Type: application/json" \
   -d "{\"username\":\"${ADMIN_USER}\",\"password\":\"${ADMIN_PASS}\",\"email\":\"${ADMIN_EMAIL}\",\"roles\":{\"role\":[{\"roleId\":\"SYSTEM_ADMIN\",\"scope\":\"g\"}]}}" \
   "${BASE_URL}/app/rest/users" || true)
 
@@ -42,7 +47,7 @@ fi
 
 echo "[3/3] Verifying REST (200 or 401 on /app/rest/server)..."
 for i in $(seq 1 120); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/app/rest/server" || true)
+  code=$(curl_in -s -o /dev/null -w "%{http_code}" "${BASE_URL}/app/rest/server" || true)
   echo "  Attempt $i -> HTTP $code"
   if [ "$code" = "200" ] || [ "$code" = "401" ]; then
     echo "TeamCity REST is ready."

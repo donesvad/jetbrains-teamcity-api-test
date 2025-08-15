@@ -64,10 +64,11 @@ jobs:
 
       - name: Wait for TeamCity HTTP to be reachable
         run: |
-          echo "Waiting for http://localhost:8111 ..."
+          echo "Waiting for TeamCity inside tc-server netns at http://localhost:8111"
           ready=false
           for i in $(seq 1 120); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
+            code=$(docker run --rm --network "container:tc-server" curlimages/curl:8.10.1 \
+              -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
             echo "Attempt $i: HTTP $code"
             if [ "$code" = "200" ] || [ "$code" = "401" ]; then
               echo "Server is reachable, HTTP $code"
