@@ -36,6 +36,7 @@ jobs:
           echo "Waiting for http://localhost:8111 ..."
           for i in $(seq 1 120); do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
+            echo "Attempt $i: HTTP $code"
             if [ "$code" = "401" ]; then
               echo "Server is ready, HTTP $code"
               break
