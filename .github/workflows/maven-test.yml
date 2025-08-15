@@ -154,6 +154,12 @@ jobs:
           allure_history: allure-history
           allure_results: ./allure-results
 
+      - name: Make report writable
+        if: always()
+        run: |
+          sudo chown -R "$USER":"$USER" allure-results allure-report allure-history || true
+          chmod -R u+rwX allure-results allure-report allure-history || true
+
       - name: Scrub secrets from Allure artifacts
         if: always()
         run: |
@@ -182,6 +188,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.VCS_PAT }}
           publish_branch: gh-pages
           publish_dir: allure-history
