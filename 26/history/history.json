@@ -1,0 +1,1 @@
+{"2cc96a7470b6618aa713c7846ae92857":{"statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1},"items":[{"uid":"57d2f39757d3e970","reportUrl":"https://donesvad.github.io/jetbrains-teamcity-api-test/26//#testresult/57d2f39757d3e970","status":"passed","time":{"start":1755259876606,"stop":1755259886739,"duration":10133}}]}}
