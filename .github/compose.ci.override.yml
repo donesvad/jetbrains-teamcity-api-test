@@ -1,0 +1,9 @@
+services:
+  tc-server:
+    volumes:
+      - tc_datadir:/data/teamcity_server/datadir
+      - tc_logs:/opt/teamcity/logs
+
+volumes:
+  tc_datadir:
+  tc_logs:

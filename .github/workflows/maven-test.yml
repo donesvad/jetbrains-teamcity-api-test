@@ -57,8 +57,15 @@ jobs:
               -o teamcity-cache/teamcity-images.tar
           fi
 
+      - name: Save TeamCity images cache now
+        if: steps.tc-img-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: teamcity-cache/teamcity-images.tar
+          key: teamcity-images-2025-07-v1
+
       - name: Start TeamCity with docker compose
-        run: docker compose up -d tc-server tc-agent
+        run: docker compose -f docker-compose.yml -f .github/compose.ci.override.yml up -d tc-server tc-agent
 
       - name: Show container states
         run: docker compose ps
