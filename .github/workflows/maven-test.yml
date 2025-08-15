@@ -93,7 +93,9 @@ jobs:
           echo "==========================================="
           exit 1
             - name: Restore pre-initialized TeamCity datadir from repo
-      - run: |
+
+      - name: Accept the EULA
+        run: |
           docker run --rm --network "container:tc-server" curlimages/curl:8.10.1 \
           -s -o /dev/null -w "%{http_code}" \
           -X POST "http://localhost:8111/showAgreement.html" \
@@ -112,6 +114,9 @@ jobs:
           VCS_USERNAME: ${{ secrets.VCS_USERNAME }}
         run: docker compose run --rm test-runner
 
+      - name: Copy Allure results
+        run: docker cp java-api-tests-container:/app/target/allure-results ./allure-results
+
       - name: Dump logs on failure
         if: failure()
         run: |
@@ -123,3 +128,25 @@ jobs:
       - name: Teardown
         if: always()
         run: docker compose down -v
+
+      - name: Load test report history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.9
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: ./allure-results
+      - name: Publish test report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
