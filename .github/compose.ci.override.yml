@@ -1,5 +1,8 @@
 services:
   tc-server:
+    environment:
+      - TEAMCITY_SERVER_MEM_OPTS=-Xmx2g
+      - TEAMCITY_SERVER_OPTS=-Dteamcity.startup.maintenance=false
     volumes:
       - tc_datadir:/data/teamcity_server/datadir
       - tc_logs:/opt/teamcity/logs
