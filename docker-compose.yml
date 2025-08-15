@@ -11,7 +11,7 @@ services:
       - ./tc_data/datadir:/data/teamcity_server/datadir
       - ./tc_data/logs:/opt/teamcity/logs
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8111 | grep -q TeamCity || exit 1"]
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8111 | grep -q TeamCity || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 60
@@ -27,6 +27,20 @@ services:
       - tc-server
     networks:
       - tcnet
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: tc-tests
+    environment:
+      - environment=docker
+      - VCS_PAT=${VCS_PAT:-}
+      - VCS_USERNAME=${VCS_USERNAME:-donesvad}
+    networks:
+      - tcnet
+    volumes:
+      - ./target:/app/target
 
 networks:
   tcnet:

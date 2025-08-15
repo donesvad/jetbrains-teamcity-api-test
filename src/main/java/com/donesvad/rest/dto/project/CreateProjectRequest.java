@@ -1,19 +1,10 @@
 package com.donesvad.rest.dto.project;
 
 import lombok.Builder;
-import lombok.Value;
 
-@Value
 @Builder
-public class CreateProjectRequest {
-  @Value
+public record CreateProjectRequest(
+    ParentProject parentProject, String name, String id, boolean copyAllAssociatedSettings) {
   @Builder
-  public static class ParentProject {
-    String locator;
-  }
-
-  ParentProject parentProject;
-  String name;
-  String id;
-  boolean copyAllAssociatedSettings;
+  public record ParentProject(String locator) {}
 }

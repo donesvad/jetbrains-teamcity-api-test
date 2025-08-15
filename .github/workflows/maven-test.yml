@@ -29,7 +29,7 @@ jobs:
           sudo apt-get install -y jq curl
 
       - name: Start TeamCity with docker compose
-        run: docker compose up -d
+        run: docker compose up -d tc-server tc-agent
 
       - name: Wait for TeamCity HTTP to load
         run: |
@@ -43,15 +43,18 @@ jobs:
             sleep 2
           done
 
-#      - name: Bootstrap TeamCity admin
-#        run: |
-#          chmod +x scripts/bootstrap-admin.sh
-#          ./scripts/bootstrap-admin.sh
+      - name: Bootstrap TeamCity admin
+        run: |
+          chmod +x scripts/bootstrap-admin.sh
+          ./scripts/bootstrap-admin.sh
 
       - name: Build tests
         run: mvn -q -DskipTests package
 
       - name: Run tests
+        env:
+          VCS_PAT: ${{ secrets.VCS_PAT }}
+          VCS_USERNAME: ${{ secrets.VCS_USERNAME }}
         run: mvn -q test
 
       - name: Dump logs on failure

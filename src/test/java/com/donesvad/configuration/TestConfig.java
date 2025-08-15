@@ -5,11 +5,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 @Getter
 @Setter
-//@Configuration
 @ConfigurationProperties(prefix = "tc")
 public class TestConfig {
 
@@ -18,23 +16,16 @@ public class TestConfig {
   private String password;
 
   private String projectId;
-  private String compileBuildTypeId;
-  private String publishBuildTypeId;
-  private String deletedBuildTypeId;
 
   private String dslRepoUrl;
   private String dslRepoBranch;
 
-  private String dslBuildTypeFilePath;
-  private String roundtripParamName;
+  private String vcsAuthMethod; // e.g., "PASSWORD" to use a personal access token as password
+  private String vcsUsername; // e.g., your VCS username (for GitHub can be your username)
+  private String vcsToken; // the personal access token (will be sent as secure:password)
 
-  private String gitAuthorName;
-  private String gitAuthorEmail;
-
-  private Boolean versionedSettingsServerCanCommit;
-
-    @PostConstruct
-    public void initRestAssured() {
-      RestAssured.baseURI = baseUrl;
-    }
+  @PostConstruct
+  public void initRestAssured() {
+    RestAssured.baseURI = baseUrl;
+  }
 }

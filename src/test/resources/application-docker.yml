@@ -1,0 +1,18 @@
+tc:
+  baseUrl: "http://localhost:8111"
+  username: "admin"
+  password: "admin123_ChangeMe"
+
+  projectId: "DslSamples"
+
+  dslRepoUrl: "https://github.com/donesvad/teamcity-dsl-demo.git"
+  dslRepoBranch: "refs/heads/main"
+
+  vcsAuthMethod: "PASSWORD"            # ANONYMOUS | PASSWORD | PRIVATE_KEY_DEFAULT | PRIVATE_KEY_FILE
+  vcsUsername: "donesvad"     # e.g., GitHub username
+  vcsToken: "${VCS_PAT:}"              # Personal Access Token (recommended to supply via env var VCS_PAT)
+
+log:
+  rest-assured-requests: false
+  rest-assured-responses: false
+  rest-assured-only-on-fail: true

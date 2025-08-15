@@ -1,45 +1,159 @@
-# Java API E2E Test Framework
+# JetBrains TeamCity API E2E Tests
 
-## Overview
-
-This project is an end-to-end (E2E) test framework for API testing using Java. The framework leverages several powerful libraries and tools to provide
-comprehensive testing capabilities for RESTful APIs and gRPC services.
+This repository contains end-to-end API tests for TeamCity that import a Kotlin DSL-based project from a Git repository using REST API and verify the project is
+available after loading settings.
 
 ## Key Features
 
 - **Spring Boot Integration**: Utilizes Spring Boot for setting up test configurations and running tests.
 - **JUnit 5**: Provides a robust testing environment using the JUnit 5 framework.
 - **REST Assured**: Facilitates easy and powerful REST API testing.
-- **gRPC Support**: Supports gRPC services testing with the `grpc-spring-boot-starter`.
-- **JWT Handling**: Enables JWT token generation and validation for secured endpoints.
 - **Logback for Logging**: Leverages Spring's default Logback for flexible and performant logging capabilities.
 - **Lombok**: Simplifies Java code by reducing boilerplate.
-- **Protobuf Support**: Enables Protocol Buffers (protobuf) serialization for gRPC testing.
 - **Allure Reporting**: Integrates with Allure for generating detailed test reports.
 - **GitHub Actions for CI**: Implements Continuous Integration (CI) using GitHub Actions to automatically build, test, and publish test reports. The CI workflow
   triggers on push, pull request, or manually, ensuring that the code is always in a deployable state.
-- **WireMock for Mocking**: Utilizes WireMock for mocking external HTTP dependencies, allowing for isolated and repeatable tests by simulating the behavior of
-  an external API without relying on its availability.
 - **Test Parallelization**: Supports both thread-based and fork-based parallelization strategies to speed up test execution.
 - **Automatic Retry of Failing Tests**: Automatically retries failing tests to handle flaky tests or transient failures.
 - **Docker Support**: Provides Docker support for running tests in a containerized environment, ensuring consistent test execution across different machines.
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Java 21
+- Maven
+- A running TeamCity server (baseUrl)
+- Valid TeamCity credentials (admin or appropriate permissions)
+- A Git repository hosting TeamCity Kotlin DSL (e.g., https://github.com/donesvad/teamcity-dsl-demo)
 
-- **Java 17** or higher
-- **Maven** (version 3.6.0 or higher)
-- **Allure CLI** (for generating and viewing reports)
-- **Docker** (optional, for running tests in a containerized environment)
+## Configuration
 
-### Build and Run Tests
+Configuration lives under src/test/resources. By default, application-dev.yml is used.
 
-To build the project and run all tests, use the following Maven commands:
+Properties under tc:
 
-```bash
-mvn clean install -DskipTests
-mvn test
+- baseUrl: TeamCity server URL (e.g., http://localhost:8111)
+- username: TeamCity username
+- password: TeamCity password
+- projectId: Target TeamCity project ID to create/import under _Root
+- dslRepoUrl: URL of your DSL repo (HTTPS)
+- dslRepoBranch: Branch ref of your DSL (e.g., refs/heads/main)
+- vcsAuthMethod: VCS auth method for the VCS root (ANONYMOUS | PASSWORD | PRIVATE_KEY_DEFAULT | PRIVATE_KEY_FILE)
+- vcsUsername: Username for the VCS (required for PASSWORD)
+- vcsToken: Personal Access Token (PAT) for the VCS; will be sent as secure:password
+
+Example snippet:
+
+```
+tc:
+  baseUrl: "http://localhost:8111"
+  username: "admin"
+  password: "<your-admin-password>"
+
+  projectId: "DslSamples"
+
+  dslRepoUrl: "https://github.com/donesvad/teamcity-dsl-demo.git"
+  dslRepoBranch: "refs/heads/main"
+
+  vcsAuthMethod: "PASSWORD"            # ANONYMOUS | PASSWORD | PRIVATE_KEY_DEFAULT | PRIVATE_KEY_FILE
+  vcsUsername: "your-vcs-username"
+  vcsToken: "${VCS_PAT:}"              # Supply via environment variable
+```
+
+Security tip:
+
+- Do NOT hardcode tokens in files. Use environment variables instead:
+    - macOS/Linux: export VCS_PAT=ghp_your_personal_token
+    - Windows (PowerShell): $env:VCS_PAT = "ghp_your_personal_token"
+
+If your repo is public and supports anonymous read, you can use:
+
+- vcsAuthMethod: "ANONYMOUS"
+- vcsUsername: ""
+- vcsToken: ""
+
+## What the test does
+
+ImportDslFlowTest performs the following steps:
+
+1. Clean up any existing project with the configured projectId (BeforeEach).
+2. Create the project under the _Root parent if it does not exist.
+3. Create a Git VCS root for your DSL repository, honoring the configured auth method (PAT supported via PASSWORD + secure:password).
+4. Enable Versioned Settings for the project with:
+    - format = KOTLIN
+    - synchronizationMode = enabled
+    - buildSettingsMode = useFromVCS
+    - importDecision = importFromVCS
+    - vcsRootId = <created VCS root id>
+5. Trigger versioned settings load.
+6. Verify the project exists. (You can extend assertions to validate build types if desired.)
+
+## Running the tests
+
+- Build (skip tests): mvn -q -DskipTests clean package
+- Run tests: mvn -q test
+
+Ensure your TeamCity server is reachable and credentials are correct.
+
+## Docker and Docker Compose
+
+This repository also includes Docker support to spin up a local TeamCity and run tests inside a container.
+
+### 1) Start TeamCity locally via Docker Compose
+
+```
+docker compose up -d tc-server tc-agent
+```
+
+This will:
+
+- Start TeamCity Server on http://localhost:8111 (data persists in ./tc_data)
+- Start one TeamCity Agent
+- Wait until the server is healthy (healthcheck included)
+
+Note: The provided tc_data contains configuration to skip the initial maintenance screen. If running for the first time, allow the server a couple of minutes to
+initialize.
+
+### 2) Run tests in Docker via Docker Compose
+
+The compose file now has a test runner service that builds the test image using the existing dockerfile and executes the test suite with a docker-specific
+configuration file.
+
+```
+# Optionally export secrets
+export VCS_PAT=ghp_your_token
+export VCS_USERNAME=your_vcs_username
+
+# Run tests (will wait for TeamCity to be healthy)
+docker compose run --rm test-runner
+```
+
+What happens:
+
+- The test container uses src/test/resources/application-docker.yml (selected by environment=docker) where tc.baseUrl points to http://tc-server:8111.
+- VCS credentials can be supplied via environment variables VCS_PAT and VCS_USERNAME.
+- Test results (Surefire, Allure) are written to ./target on the host (mounted from /app/target in the container).
+
+To view logs of the server:
+
+```
+docker compose logs -f tc-server
+```
+
+To stop and clean containers:
+
+```
+docker compose down
+```
+
+## Debugging
+
+You can enable full RestAssured request/response logging to compare the automated calls with manual steps. In src/test/resources/application-dev.yml:
+
+```
+log:
+  rest-assured-requests: true
+  rest-assured-responses: true
+  rest-assured-only-on-fail: false
 ```
 
 ### Generating and Viewing Allure Reports
@@ -87,52 +201,6 @@ scoop install allure    # For Windows users using Scoop
 
 Or follow the [installation instructions](https://allurereport.org/docs/install/) from the Allure documentation for other operating systems.
 
-### Protobuf and gRPC Plugin
-
-The protobuf-maven-plugin is used for generating Java sources from `.proto` files. Make sure to configure your `.proto` files in the `src/main/proto` directory
-and follow the plugin's guidelines for compatibility.
-
-### Logging
-
-This application uses Logback, the default logging framework provided by Spring Boot. Logback offers a robust and flexible logging configuration.
-You can customize log levels for specific packages or classes by modifying the `logback-test.xml` file located in the `src/test/resources` directory.
-
-### Continuous Integration (CI) Pipeline
-
-This project uses GitHub Actions for Continuous Integration (CI) to automatically run end-to-end (E2E) API tests on each push or pull request to the `main`
-branch. The CI pipeline is defined in the `.github/workflows/maven-test.yml` file and consists of the following steps:
-
-1. Triggering the Workflow:
-    - The workflow is triggered on any push or pull request to the `main` branch or manually via the "workflow_dispatch" event.
-2. Setting Up the Environment:
-    - The CI pipeline runs on the ubuntu-latest virtual machine.
-    - It checks out the code from the repository and sets up JDK 17 using the `actions/setup-java@v4` action.
-3. Building the Project:
-    - The project is first built using Maven with the command mvn clean install -DskipTests. This command compiles the project and skips the tests to quickly
-      validate the build.
-4. Running the Tests:
-    - After the build, the E2E API tests are executed using the mvn test command. This step ensures that all tests are run and their results are generated.
-5. Generating and Publishing the Allure Test Report:
-    - The CI pipeline loads the test report history from the gh-pages branch.
-    - The Allure report is generated using the `simple-elf/allure-report-action@v1.9` action.
-    - The generated report is then published to the gh-pages branch using the `peaceiris/actions-gh-pages@v3` action.
-6. Accessing the Allure Report:
-    - After the workflow runs, you can view the Allure report. The Allure report is hosted on GitHub Pages and can be accessed using the following
-      link: [View Allure Report Results](https://donesvad.github.io/java-api-test/)
-
-This CI pipeline ensures that all changes to the main branch are thoroughly tested and that test results are easily accessible through the Allure report.
-
-### WireMock
-
-WireMock is integrated into the project to mock external API dependencies, enabling more controlled and predictable testing environments. This is particularly
-useful for scenarios where the external service is unreliable, expensive to use, or simply unavailable during testing.
-
-WireMock allows you to:
-
-- Define stubs for external service endpoints, returning pre-defined responses for various HTTP methods.
-- Simulate different response statuses and delays to test how your application handles various scenarios.
-- Ensure that your tests are fast, reliable, and do not depend on external network conditions.
-
 ### Test Parallelization
 
 To improve the efficiency and speed of the test execution, especially when dealing with a large number of test scenarios, this framework supports parallel
@@ -172,6 +240,7 @@ higher degree of isolation between test cases, making it suitable for tests that
 To enable fork-based parallelization in Maven, update the surefire plugin configuration in your `pom.xml` file:
 
 ```xml
+
 <configuration>
   <forkCount>2</forkCount>
   <reuseForks>true</reuseForks>
@@ -189,9 +258,3 @@ By combining both thread-based and fork-based parallelization strategies, you ca
 
 To handle flaky tests or tests that intermittently fail due to non-deterministic issues (such as network timeouts or temporary service unavailability), this
 framework supports automatic retries of failing tests using the `rerunFailingTestsCount` feature of the Maven Surefire and Failsafe plugins.
-
-### Docker Support
-
-To simplify the setup process and ensure a consistent environment across different machines, this project supports running the E2E API test framework inside a
-Docker container. Docker allows you to package the framework along with all its dependencies, making it easier to run tests without worrying about local
-environment configurations.

@@ -12,42 +12,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ApiClient {
 
-  private final String baseUrl;
   private final String username;
   private final String password;
 
   private RequestSpecification spec() {
     return new RequestSpecBuilder()
-        //        .setBaseUri(baseUrl)
         .setAuth(preemptive().basic(username, password))
+        .setAccept(ContentType.JSON)
+        .setContentType(ContentType.JSON)
         .build();
   }
 
-  public Response getJson(String path) {
-    return given(spec()).accept(ContentType.JSON).get(path);
-  }
-
-  public Response getPlain(String path) {
+  public Response get(String path) {
     return given(spec()).get(path);
   }
 
-  public Response postJson(String path, Object body) {
-    return given(spec())
-        .accept(ContentType.JSON)
-        .contentType(ContentType.JSON)
-        .body(body)
-        .post(path);
+  public Response post(String path, Object body) {
+    return given(spec()).body(body).post(path);
   }
 
-  public Response postJson(String path) {
-    return postJson(path, "{}");
+  public Response post(String path) {
+    return post(path, "{}");
   }
 
-  public Response putJson(String path, Object body) {
-    return given(spec())
-        .accept(ContentType.JSON)
-        .contentType(ContentType.JSON)
-        .body(body)
-        .put(path);
+  public Response put(String path, Object body) {
+    return given(spec()).body(body).put(path);
+  }
+
+  public Response delete(String path) {
+    return given(spec()).delete(path);
   }
 }

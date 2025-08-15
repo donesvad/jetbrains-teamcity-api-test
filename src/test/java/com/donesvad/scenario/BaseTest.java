@@ -1,6 +1,14 @@
 package com.donesvad.scenario;
 
 import com.donesvad.configuration.SpringConfiguration;
+import com.donesvad.configuration.TestConfig;
+import io.qameta.allure.restassured.AllureRestAssured;
+import io.restassured.RestAssured;
+import io.restassured.filter.Filter;
+import io.restassured.filter.log.RequestLoggingFilter;
+import io.restassured.filter.log.ResponseLoggingFilter;
+import java.util.LinkedList;
+import java.util.List;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -14,20 +22,30 @@ import org.springframework.core.env.Environment;
 @SpringBootTest(classes = SpringConfiguration.class)
 public abstract class BaseTest {
 
-  //  @Autowired protected CarsAction carsAction;
-  //  @Autowired protected CarsMock carsMock;
-  //  @Autowired protected TestContext testContext;
+  @Autowired protected TestConfig config;
 
   @BeforeAll
   public static void setup(@Autowired Environment env) {
-    //    RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    //    List<Filter> filters = new LinkedList<>();
-    //    filters.add(new AllureRestAssured());
-    //    if (Boolean.parseBoolean(env.getProperty("log.rest-assured-responses", "false"))) {
-    //      filters.add(new ResponseLoggingFilter());
-    //    }
-    //    RestAssured.filters(filters);
-    //    RestAssured.useRelaxedHTTPSValidation();
+    boolean logRequests =
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-requests", "true"));
+    boolean logResponses =
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-responses", "true"));
+    boolean logOnValidationFailOnly =
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-only-on-fail", "false"));
+
+    List<Filter> filters = new LinkedList<>();
+    filters.add(new AllureRestAssured());
+
+    if (logOnValidationFailOnly) {
+      RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+    } else {
+      if (logRequests) filters.add(new RequestLoggingFilter());
+      if (logResponses) filters.add(new ResponseLoggingFilter());
+    }
+
+    RestAssured.filters(filters);
+
+    RestAssured.useRelaxedHTTPSValidation();
   }
 
   @AfterAll
