@@ -165,7 +165,7 @@ test results, logs, and visualizations.
 
 The latest Allure report for this project can be viewed online at the following link:
 
-[View Allure Report Results](https://donesvad.github.io/java-api-test/)
+[View Allure Report Results](https://donesvad.github.io/jetbrains-teamcity-api-test/27/index.html)
 
 This report includes:
 
