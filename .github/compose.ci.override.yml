@@ -6,6 +6,8 @@ services:
     volumes:
       - tc_datadir:/data/teamcity_server/datadir
       - tc_logs:/opt/teamcity/logs
+    ports:
+      - "8111:8111"
 
 volumes:
   tc_datadir:

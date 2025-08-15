@@ -1,5 +1,5 @@
 tc:
-  baseUrl: "http://tc-server:8111"
+  baseUrl: "http://localhost:8111"
   username: "admin"
   password: "admin123_ChangeMe"
 
