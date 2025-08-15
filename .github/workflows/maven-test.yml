@@ -154,6 +154,30 @@ jobs:
           allure_history: allure-history
           allure_results: ./allure-results
 
+      - name: Scrub secrets from Allure artifacts
+        if: always()
+        run: |
+          set -e
+
+          # 1) Drop raw attachments which often contain tokens
+          find allure-results -type d -name attachments -prune -exec rm -rf {} + 2>/dev/null || true
+          find allure-report  -type d -path "*/data/attachments" -prune -exec rm -rf {} + 2>/dev/null || true
+          find allure-history -type d -path "*/data/attachments" -prune -exec rm -rf {} + 2>/dev/null || true
+
+          # 2) Best-effort redact token patterns in remaining text files
+          shopt -s globstar nullglob
+          for f in allure-results/**/* allure-report/**/* allure-history/**/*; do
+            [ -f "$f" ] || continue
+            # only touch text-like files
+            file "$f" | grep -qiE 'text|json|xml|html|csv' || continue
+            sed -E -i \
+              -e 's/github_pat_[A-Za-z0-9_]{22}_[A-Za-z0-9]{59}/[REDACTED]/g' \
+              -e 's/gh[pous]_[A-Za-z0-9]{36}/[REDACTED]/g' \
+              -e 's/(Bearer )[A-Za-z0-9._-]{20,}/\1[REDACTED]/g' \
+              -e 's/([A-Za-z0-9+\/]{20,}\.[A-Za-z0-9+\/_-]{10,}\.[A-Za-z0-9+\/_-]{10,})/[REDACTED]/g' \
+              "$f" || true
+          done
+
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
