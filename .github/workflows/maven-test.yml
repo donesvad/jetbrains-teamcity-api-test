@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -59,13 +57,6 @@ jobs:
               -o teamcity-cache/teamcity-images.tar
           fi
 
-      - name: Restore pre-initialized TeamCity datadir from repo
-        run: |
-          set -euo pipefail
-          sudo mkdir -p tc_data
-          sudo tar -xzf teamcity-cache/teamcity-datadir.tar.gz -C tc_data
-          sudo chown -R 1000:1000 tc_data
-
       - name: Start TeamCity with docker compose
         run: docker compose -f docker-compose.yml -f .github/compose.ci.override.yml up -d tc-server tc-agent
 
@@ -89,7 +80,7 @@ jobs:
               -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
 
             echo "Attempt $i: HTTP $code (state: $state)"
-            if [ "$code" = "200" ] || [ "$code" = "401" ]; then
+            if [ "$code" = "302" ]; then
               echo "Server is reachable, HTTP $code"
               exit 0
             fi
@@ -101,6 +92,14 @@ jobs:
           docker compose logs --tail=200 tc-server || true
           echo "==========================================="
           exit 1
+            - name: Restore pre-initialized TeamCity datadir from repo
+      - run: |
+          docker run --rm --network "container:tc-server" curlimages/curl:8.10.1 \
+          -s -o /dev/null -w "%{http_code}" \
+          -X POST "http://localhost:8111/showAgreement.html" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "accept=true&submit=Continue"
+
 
       - name: Bootstrap TeamCity admin
         run: |
