@@ -28,9 +28,9 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y jq curl
 
-      # 1) Try to restore cached TeamCity images tar
+      # Restore images tar if available
       - name: Restore TeamCity Docker images cache
-        id: tc-cache
+        id: tc-img-cache
         uses: actions/cache@v4
         with:
           path: teamcity-cache/teamcity-images.tar
@@ -38,12 +38,11 @@ jobs:
           restore-keys: |
             teamcity-images-2025-07-
 
-      # 2) Load cached images if present, otherwise pull and save them
+      # Load from cache or pull then save
       - name: Load or pull TeamCity images
         run: |
           set -euo pipefail
           mkdir -p teamcity-cache
-
           if [ -f teamcity-cache/teamcity-images.tar ]; then
             echo "Cache hit. Loading TeamCity images from tar..."
             docker load -i teamcity-cache/teamcity-images.tar
@@ -51,8 +50,7 @@ jobs:
             echo "Cache miss. Pulling TeamCity images..."
             docker pull jetbrains/teamcity-server:2025.07
             docker pull jetbrains/teamcity-agent:2025.07
-
-            echo "Saving TeamCity images to tar for caching..."
+            echo "Saving images to tar for future cache..."
             docker save \
               jetbrains/teamcity-server:2025.07 \
               jetbrains/teamcity-agent:2025.07 \
@@ -62,25 +60,38 @@ jobs:
       - name: Start TeamCity with docker compose
         run: docker compose up -d tc-server tc-agent
 
-      - name: Wait for TeamCity HTTP to be reachable
+      - name: Show container states
+        run: docker compose ps
+
+      - name: Wait for TeamCity inside tc-server netns
         run: |
           echo "Waiting for TeamCity inside tc-server netns at http://localhost:8111"
-          ready=false
           for i in $(seq 1 120); do
+            state=$(docker inspect -f '{{.State.Status}}' tc-server 2>/dev/null || echo "not-found")
+            if [ "$state" != "running" ]; then
+              echo "ERROR: tc-server state is $state. Cannot probe inside its netns."
+              echo "===== tc-server logs (last 200 lines) ====="
+              docker compose logs --tail=200 tc-server || true
+              echo "==========================================="
+              exit 1
+            fi
+
             code=$(docker run --rm --network "container:tc-server" curlimages/curl:8.10.1 \
               -s -o /dev/null -w "%{http_code}" http://localhost:8111 || true)
-            echo "Attempt $i: HTTP $code"
+
+            echo "Attempt $i: HTTP $code (state: $state)"
             if [ "$code" = "200" ] || [ "$code" = "401" ]; then
               echo "Server is reachable, HTTP $code"
-              ready=true
-              break
+              exit 0
             fi
             sleep 2
           done
-          if [ "$ready" != "true" ]; then
-            echo "ERROR: TeamCity did not become reachable in time"
-            exit 1
-          fi
+
+          echo "ERROR: TeamCity did not become reachable in time"
+          echo "===== tc-server logs (last 200 lines) ====="
+          docker compose logs --tail=200 tc-server || true
+          echo "==========================================="
+          exit 1
 
       - name: Bootstrap TeamCity admin
         run: |
