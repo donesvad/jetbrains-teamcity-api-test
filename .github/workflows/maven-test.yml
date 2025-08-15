@@ -57,36 +57,11 @@ jobs:
               -o teamcity-cache/teamcity-images.tar
           fi
 
-      - name: Save TeamCity images cache now
-        if: steps.tc-img-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: teamcity-cache/teamcity-images.tar
-          key: teamcity-images-2025-07-v1
-
-      # Restore the pre-initialized datadir from Actions cache
-      - name: Restore TeamCity datadir cache
-        id: tc-data-cache
-        uses: actions/cache@v4
-        with:
-          path: teamcity-cache/teamcity-datadir.tar.gz
-          key: teamcity-datadir-2025-07-v1
-          restore-keys: |
-            teamcity-datadir-2025-07-
-
-      # Unpack it to the bind mount location
-      - name: Prepare datadir
+      - name: Restore pre-initialized TeamCity datadir from repo
         run: |
           set -euo pipefail
           sudo mkdir -p tc_data
-          if [ -f teamcity-cache/teamcity-datadir.tar.gz ]; then
-            echo "Restoring pre-initialized datadir..."
-            sudo tar -xzf teamcity-cache/teamcity-datadir.tar.gz -C tc_data
-          else
-            echo "ERROR: No pre-initialized datadir found in cache. Seed it once locally."
-            exit 1
-          fi
-          # Ensure tcuser can write
+          sudo tar -xzf teamcity-cache/teamcity-datadir.tar.gz -C tc_data
           sudo chown -R 1000:1000 tc_data
 
       - name: Start TeamCity with docker compose
