@@ -27,14 +27,13 @@ public abstract class BaseTest {
   @BeforeAll
   public static void setup(@Autowired Environment env) {
     boolean logRequests =
-        Boolean.parseBoolean(env.getProperty("log.rest-assured-requests", "true"));
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-requests", "false"));
     boolean logResponses =
-        Boolean.parseBoolean(env.getProperty("log.rest-assured-responses", "true"));
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-responses", "false"));
     boolean logOnValidationFailOnly =
-        Boolean.parseBoolean(env.getProperty("log.rest-assured-only-on-fail", "false"));
+        Boolean.parseBoolean(env.getProperty("log.rest-assured-only-on-fail", "true"));
 
     List<Filter> filters = new LinkedList<>();
-    filters.add(new AllureRestAssured());
 
     if (logOnValidationFailOnly) {
       RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
