@@ -29,7 +29,7 @@ public class ImportDslFlowTest extends BaseTest {
   }
 
   @Test
-  void importDslProject_and_ensureUsable() {
+  void importDslProject() {
     client.createProjectUnderRoot(
         CreateProjectRequest.builder()
             .parentProject(CreateProjectRequest.ParentProject.builder().locator("_Root").build())
