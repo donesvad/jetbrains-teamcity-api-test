@@ -5,27 +5,22 @@ import static org.apache.http.HttpStatus.SC_OK;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 
+import com.donesvad.rest.dto.buildtype.BuildTypesDto;
 import com.donesvad.rest.dto.project.CreateProjectRequest;
 import com.donesvad.rest.dto.project.ProjectDto;
-import com.donesvad.rest.dto.project.ProjectsDto;
 import com.donesvad.rest.dto.vcs.CreateVcsRootRequest;
 import com.donesvad.rest.dto.vcs.VersionedSettingsConfigRequest;
+import com.donesvad.rest.dto.vcs.VersionedSettingsStatusDto;
 import com.donesvad.rest.endpoints.TeamCityEndpoints;
 import io.restassured.response.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 
+@CommonsLog
 @RequiredArgsConstructor
 public class TeamCityClient {
 
   private final ApiClient api;
-
-  public ProjectsDto getProjects() {
-    return api.get(TeamCityEndpoints.PROJECTS)
-        .then()
-        .statusCode(SC_OK)
-        .extract()
-        .as(ProjectsDto.class);
-  }
 
   public Response getProjectResponse(String projectId) {
     return api.get(TeamCityEndpoints.projectById(projectId));
@@ -33,6 +28,14 @@ public class TeamCityClient {
 
   public ProjectDto getProject(String projectId) {
     return getProjectResponse(projectId).then().statusCode(SC_OK).extract().as(ProjectDto.class);
+  }
+
+  public BuildTypesDto getProjectBuildTypes(String projectId) {
+    return api.get(TeamCityEndpoints.projectBuildTypes(projectId))
+        .then()
+        .statusCode(SC_OK)
+        .extract()
+        .as(BuildTypesDto.class);
   }
 
   public void createProjectUnderRoot(CreateProjectRequest req) {
@@ -60,5 +63,13 @@ public class TeamCityClient {
 
   public void loadVersionedSettings(String projectId) {
     api.post(TeamCityEndpoints.projectVsLoad(projectId)).then().statusCode(SC_OK);
+  }
+
+  public VersionedSettingsStatusDto getVersionedSettingsStatusResponse(String projectId) {
+    return api.get(TeamCityEndpoints.versionedSettingsStatus(projectId))
+        .then()
+        .statusCode(SC_OK)
+        .extract()
+        .as(VersionedSettingsStatusDto.class);
   }
 }
