@@ -1,0 +1,4 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"failed","Wed Aug 27 19:17:51 GMT 2025","Wed Aug 27 19:18:22 GMT 2025","31666","","com.donesvad.scenario.ImportDslFlowTest","","com.donesvad.scenario.ImportDslFlowTest","loadSettingsAfterImportDslProject","loadSettingsAfterImportDslProject()",""
+"passed","Wed Aug 27 19:16:02 GMT 2025","Wed Aug 27 19:17:00 GMT 2025","58185","","com.donesvad.scenario.ImportDslFlowTest","","com.donesvad.scenario.ImportDslFlowTest","importDslProject","importDslProject()",""
+"passed","Wed Aug 27 19:16:02 GMT 2025","Wed Aug 27 19:17:51 GMT 2025","108475","","com.donesvad.scenario.VcsToServerSyncTest","","com.donesvad.scenario.VcsToServerSyncTest","syncChangeFromVcsIsAppliedOnServer","syncChangeFromVcsIsAppliedOnServer()",""

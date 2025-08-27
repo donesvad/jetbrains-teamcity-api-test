@@ -1,0 +1,1 @@
+{"total":2,"items":[{"uid":"27ca98dba5354668c01d13058ed6687a","name":"com.donesvad.scenario.ImportDslFlowTest","statistic":{"failed":1,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":2}},{"uid":"3e34c161ced3f5fd6d257eb535b8c3f0","name":"com.donesvad.scenario.VcsToServerSyncTest","statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1}}]}
