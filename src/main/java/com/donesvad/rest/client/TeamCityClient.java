@@ -5,6 +5,7 @@ import static org.apache.http.HttpStatus.SC_OK;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 
+import com.donesvad.rest.dto.ParametersDto;
 import com.donesvad.rest.dto.buildtype.BuildTypesDto;
 import com.donesvad.rest.dto.project.CreateProjectRequest;
 import com.donesvad.rest.dto.project.ProjectDto;
@@ -74,11 +75,23 @@ public class TeamCityClient {
     api.post(TeamCityEndpoints.projectVsLoad(projectId)).then().statusCode(SC_OK);
   }
 
-  public VersionedSettingsStatusDto getVersionedSettingsStatusResponse(String projectId) {
-    return api.get(TeamCityEndpoints.versionedSettingsStatus(projectId))
+  public Response getVersionedSettingsStatusResponse(String projectId) {
+    return api.get(TeamCityEndpoints.versionedSettingsStatus(projectId));
+  }
+
+  public VersionedSettingsStatusDto getVersionedSettingsStatus(String projectId) {
+    return getVersionedSettingsStatusResponse(projectId)
         .then()
         .statusCode(SC_OK)
         .extract()
         .as(VersionedSettingsStatusDto.class);
+  }
+
+  public ParametersDto getBuildTypeParameters(String buildTypeId) {
+    return api.get(TeamCityEndpoints.buildTypeParameters(buildTypeId))
+        .then()
+        .statusCode(SC_OK)
+        .extract()
+        .as(ParametersDto.class);
   }
 }

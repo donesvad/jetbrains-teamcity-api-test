@@ -26,6 +26,7 @@
     <logging.version>2.23.1</logging.version>
     <allure.version>2.29.0</allure.version>
     <aspectj.version>1.9.21</aspectj.version>
+    <jgit.version>7.3.0.202506031305-r</jgit.version>
   </properties>
 
   <dependencyManagement>
@@ -112,6 +113,14 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- JGit for test-side Git operations -->
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>${jgit.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -134,7 +143,7 @@
             -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
             --add-exports=java.base/sun.security.x509=ALL-UNNAMED
           </argLine>
-          <forkCount>2</forkCount>
+          <forkCount>1</forkCount>
           <reuseForks>true</reuseForks>
           <rerunFailingTestsCount>1</rerunFailingTestsCount> <!-- Number of times to rerun failed tests -->
         </configuration>

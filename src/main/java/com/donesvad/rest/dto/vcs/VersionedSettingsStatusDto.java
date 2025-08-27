@@ -11,4 +11,5 @@ import lombok.Data;
 @Data
 public class VersionedSettingsStatusDto {
   private String message;
+  private String errors;
 }

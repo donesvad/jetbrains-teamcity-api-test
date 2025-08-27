@@ -11,6 +11,7 @@ import com.donesvad.rest.dto.vcs.ProjectRef;
 import com.donesvad.rest.dto.vcs.Properties;
 import com.donesvad.rest.dto.vcs.Property;
 import com.donesvad.rest.dto.vcs.VersionedSettingsConfigRequest;
+import com.donesvad.util.WaitPreset;
 import com.donesvad.wait.VersionedSettingsWaiter;
 import io.restassured.response.Response;
 import java.util.ArrayList;
@@ -26,18 +27,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ImportDslActions {
 
-  final int TIMEOUT_MS = 90_000;
-  final int POLL_INTERVAL_MS = 2_000;
   private final TeamCityClient client;
   private final VersionedSettingsWaiter waiter;
   private final TestConfig config;
-
-  /** Generate a unique project id derived from a base id. */
-  public String generateUniqueProjectId(String baseId) {
-    String suffix =
-        java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8).toLowerCase();
-    return baseId + "_" + suffix;
-  }
 
   /** Delete project if exists. */
   public void ensureProjectAbsent(String projectId) {
@@ -74,10 +66,15 @@ public class ImportDslActions {
    * Create a Git VCS root for DSL using values from TestConfig. Returns the created VCS root id.
    */
   public String createDslVcsRoot(String projectId) {
+    return createDslVcsRoot(projectId, config.getDslRepoBranch());
+  }
+
+  /** Create a Git VCS root for DSL using a specific branch reference (refs/heads/...). */
+  public String createDslVcsRoot(String projectId, String branchRef) {
     String vcsId = "dsl_" + projectId + "_git";
     List<Property> props = new ArrayList<>();
     props.add(new Property("url", config.getDslRepoUrl()));
-    props.add(new Property("branch", config.getDslRepoBranch()));
+    props.add(new Property("branch", branchRef));
     props.add(new Property("authMethod", config.getVcsAuthMethod()));
     props.add(new Property("username", config.getVcsUsername()));
     props.add(new Property("secure:password", config.getVcsToken()));
@@ -113,7 +110,10 @@ public class ImportDslActions {
   /** Wait for Applied Changes status. */
   public void waitDslIsApplied(String projectId) {
     waiter.waitForVersionedSettingsStatus(
-        projectId, VersionedSettingsWaitStatus.APPLIED_CHANGES, TIMEOUT_MS, POLL_INTERVAL_MS);
+        projectId,
+        VersionedSettingsWaitStatus.APPLIED_CHANGES,
+        WaitPreset.TIMEOUT,
+        WaitPreset.LONG_POLLING);
   }
 
   /** Trigger manual load of versioned settings. */
