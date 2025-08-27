@@ -14,11 +14,11 @@ public class ImportDslAssertions {
   private final TeamCityClient client;
 
   /** Assert only that the project exists (created) by checking its id and expected name. */
-  public void assertProjectCreated(String projectId) {
+  public void assertProjectCreated(String projectId, String projectName) {
     var project = client.getProject(projectId);
     assertThat(project).as("Project not found: %s", projectId).isNotNull();
     assertThat(project.getId()).as("Project id mismatch").isEqualTo(projectId);
-    assertThat(project.getName()).as("Project name mismatch").isEqualTo(projectId);
+    assertThat(project.getName()).as("Project name mismatch").isEqualTo(projectName);
   }
 
   /** Assert that the project has build configurations imported from DSL with valid metadata. */

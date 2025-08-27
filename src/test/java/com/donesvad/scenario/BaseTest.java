@@ -2,7 +2,6 @@ package com.donesvad.scenario;
 
 import com.donesvad.configuration.SpringConfiguration;
 import com.donesvad.configuration.TestConfig;
-import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.filter.Filter;
 import io.restassured.filter.log.RequestLoggingFilter;

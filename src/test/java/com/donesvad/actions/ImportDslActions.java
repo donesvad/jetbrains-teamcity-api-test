@@ -26,11 +26,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ImportDslActions {
 
-  final int TIMEOUT_MS = 30_000;
+  final int TIMEOUT_MS = 90_000;
   final int POLL_INTERVAL_MS = 2_000;
   private final TeamCityClient client;
   private final VersionedSettingsWaiter waiter;
   private final TestConfig config;
+
+  /** Generate a unique project id derived from a base id. */
+  public String generateUniqueProjectId(String baseId) {
+    String suffix =
+        java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8).toLowerCase();
+    return baseId + "_" + suffix;
+  }
 
   /** Delete project if exists. */
   public void ensureProjectAbsent(String projectId) {
@@ -40,12 +47,24 @@ public class ImportDslActions {
     }
   }
 
+  /** Delete all projects whose id starts with the given prefix. */
+  public void ensureProjectsWithPrefixAbsent(String projectIdPrefix) {
+    var projects = client.getProjects();
+    if (projects != null && projects.getProject() != null) {
+      for (var p : projects.getProject()) {
+        if (p != null && p.getId() != null && p.getId().startsWith(projectIdPrefix)) {
+          client.deleteProject(p.getId());
+        }
+      }
+    }
+  }
+
   /** Create an empty project under _Root. */
-  public void createProjectUnderRoot(String projectId) {
+  public void createProjectUnderRoot(String projectId, String projectName) {
     client.createProjectUnderRoot(
         CreateProjectRequest.builder()
             .parentProject(CreateProjectRequest.ParentProject.builder().locator("_Root").build())
-            .name(projectId)
+            .name(projectName)
             .id(projectId)
             .copyAllAssociatedSettings(true)
             .build());

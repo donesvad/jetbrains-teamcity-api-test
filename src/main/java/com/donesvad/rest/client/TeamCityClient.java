@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.equalTo;
 import com.donesvad.rest.dto.buildtype.BuildTypesDto;
 import com.donesvad.rest.dto.project.CreateProjectRequest;
 import com.donesvad.rest.dto.project.ProjectDto;
+import com.donesvad.rest.dto.project.ProjectsDto;
 import com.donesvad.rest.dto.vcs.CreateVcsRootRequest;
 import com.donesvad.rest.dto.vcs.VersionedSettingsConfigRequest;
 import com.donesvad.rest.dto.vcs.VersionedSettingsStatusDto;
@@ -36,6 +37,14 @@ public class TeamCityClient {
         .statusCode(SC_OK)
         .extract()
         .as(BuildTypesDto.class);
+  }
+
+  public ProjectsDto getProjects() {
+    return api.get(TeamCityEndpoints.PROJECTS)
+        .then()
+        .statusCode(SC_OK)
+        .extract()
+        .as(ProjectsDto.class);
   }
 
   public void createProjectUnderRoot(CreateProjectRequest req) {
